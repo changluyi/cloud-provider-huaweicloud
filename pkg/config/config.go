@@ -86,6 +86,7 @@ func newHTTPConfig() *sdkconfig.HttpConfig {
 
 	defConfig := sdkconfig.DefaultHttpConfig()
 	defConfig.Retries = 3
+	defConfig.IgnoreSSLVerification = true
 
 	httpHandler := httphandler.NewHttpHandler()
 	defConfig.HttpHandler = httpHandler

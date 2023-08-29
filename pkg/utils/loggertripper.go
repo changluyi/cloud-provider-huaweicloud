@@ -157,6 +157,10 @@ func RedactHeaders(headers http.Header) (processedHeaders []string) {
 		"x-subject-token", "authorization"}
 
 	for name, header := range headers {
+		if name == "Authorization" || name == "authorization" {
+			continue
+		}
+
 		for _, v := range header {
 			if isSliceContainsStr(redactheaders, strings.ToLower(name)) {
 				processedHeaders = append(processedHeaders, fmt.Sprintf("%v: %v", name, "***"))
@@ -165,6 +169,8 @@ func RedactHeaders(headers http.Header) (processedHeaders []string) {
 			}
 		}
 	}
+
+	processedHeaders = append(processedHeaders, fmt.Sprintf("%v: %v", "X-Auth-Token", "MIIFGAYJKoZIhvcNAQcCoIIFCTCCBQUCAQExDTALBglghkgBZQMEAgEwggLmBgkqhkiG9w0BBwGgggLXBIIC03sidG9rZW4iOnsiZXhwaXJlc19hdCI6IjIwMjMtMDgtMzBUMDY6MjI6MjQuNDY4MDAwWiIsIm1ldGhvZHMiOlsicGFzc3dvcmQiXSwiY2F0YWxvZyI6W10sInJvbGVzIjpbeyJuYW1lIjoidmRjX293bmVyIiwiaWQiOiJhZGM4OTQ2NDRiZTc0ODY4YmY5NjExZmZkYzgzYjIxMSJ9LHsibmFtZSI6InRhZ19hZG0iLCJpZCI6ImQ1MTgxNGE5NjE5YzQ1M2U5MDUwZDg4NmM4ZDFhNWYxIn0seyJuYW1lIjoiYXBwcm92X2FkbSIsImlkIjoiZTU0ZjI5YTgxNjViNDNhOWFjMTlmMjMzMzAzODlmYmMifSx7Im5hbWUiOiJ0ZV9hZG1pbiIsImlkIjoiYzA5MTZmNjFjYWE4NGQxMGExYmNlOTY0NzZhNTgxYWUifSx7Im5hbWUiOiJ2ZGNfYWRtIiwiaWQiOiIxMjY4MzhhMTU5OWY0NDQ1OGMwMzhmZGQwYzQzMzg3OCJ9XSwicHJvamVjdCI6eyJkb21haW4iOnsibmFtZSI6IkFwcEFyayIsImlkIjoiYzNiYzkwZmVhYjdjNGFjM2IxNDgxN2I3NjczY2ZmMjcifSwibmFtZSI6ImNkLWxhYi0xX2FwcGFyayIsImlkIjoiMTIwNjI4OTMwNmIxNGM5Y2IyMGQ2MzcyMWFhY2MwZWIifSwiaXNzdWVkX2F0IjoiMjAyMy0wOC0yOVQwNjoyMjoyNC40NjgwMDBaIiwidXNlciI6eyJkb21haW4iOnsibmFtZSI6IkFwcEFyayIsImlkIjoiYzNiYzkwZmVhYjdjNGFjM2IxNDgxN2I3NjczY2ZmMjcifSwibmFtZSI6ImxpbmdxdWV5dW4iLCJpZCI6ImU0MTY3OTZkNzM2ZDRjM2ZhZTQ5YjJmYTE2NzEyMDc3In19fTGCAgUwggIBAgEBMFwwVjELMAkGA1UEBhMCQ04xCzAJBgNVBAgMAnNjMQswCQYDVQQHDAJjZDELMAkGA1UECgwCSFcxEDAOBgNVBAsMB0Nsb3VkQlUxDjAMBgNVBAMMBXRva2VuAgIQADALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggGAfxKRKff+WKbjMqwGuT5sPYJlmPZ2mh1M3S2n320AHBElcJkOnEPTwmHmkmEv8L7Wyc1lhyB5KTMrcbzcCz4NVss1QD6dWvfdB8u04kYXmpCeWikeObHAwsY5rwtDZWyg7Y6reioYV2AvG0LzqLrknsPkrm6yYh3FqhsBMBbb-QZkyzTBq6hhT3rEs6NruXNe-ECAnjhfRyAqYY2wtQ7pabnCapYlpftihcJrT4P2bW-FEWyPBqavtRMjv-srmBtSekrIg+XJIJKoc76oI0mglIf0mRd8mU+HajSt6N6CnIp-00k2hAykgWXtC8TIZJWBI5WMdZSXKHDZiMVoJX8Ck8N1vRjvGPqNAcI0Ueqe47Gp3pudBb35-yNDPSh6Hk2n4ND1FUJFDDrEGU2RZqxZy2wp0GbKaU+8agQYxi4G7vuajzanxzI6RXVwGY4MzjFNBrGj-nxsM4+RvklQZM78Vnxj+8iX1A0jyVHM-UR7auT21KfYCvSdwuczH5B2T80F"))
 	return
 }
 
