@@ -76,6 +76,10 @@ func (e *EIpClient) Unbind(id string) error {
 }
 
 func (e *EIpClient) Delete(id string) error {
+	if id == "" {
+		return nil
+	}
+
 	return e.wrapper(func(c *eip.EipClient) (interface{}, error) {
 		return c.DeletePublicip(&model.DeletePublicipRequest{PublicipId: id})
 	})

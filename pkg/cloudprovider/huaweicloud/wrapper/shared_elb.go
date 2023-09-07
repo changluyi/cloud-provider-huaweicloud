@@ -386,7 +386,7 @@ func (s *SharedLoadBalanceClient) DeleteAllPoolMembers(poolID string) error {
 
 func (s *SharedLoadBalanceClient) wrapper(handler func(*elb.ElbClient) (interface{}, error), args ...interface{}) error {
 	return commonWrapper(func() (interface{}, error) {
-		hc := s.AuthOpts.GetHcClient("elb")
+		hc := s.AuthOpts.GetHcClient("vpc")
 		return handler(elb.NewElbClient(hc))
 	}, OKCodes, args...)
 }

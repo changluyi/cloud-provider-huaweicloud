@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -158,12 +159,12 @@ func (b Basic) getNodeSubnetID(node *v1.Node) (string, error) {
 		return "", err
 	}
 
-	instance, err := b.ecsClient.GetByName(node.Name)
+	instanceID, err := parseInstanceID(node.Spec.ProviderID)
 	if err != nil {
 		return "", err
 	}
 
-	interfaces, err := b.ecsClient.ListInterfaces(&ecsmodel.ListServerInterfacesRequest{ServerId: instance.Id})
+	interfaces, err := b.ecsClient.ListInterfaces(&ecsmodel.ListServerInterfacesRequest{ServerId: instanceID})
 	if err != nil {
 		return "", err
 	}
@@ -186,12 +187,12 @@ func (b Basic) allowHealthCheckRule(node *v1.Node) error {
 		healthCheckCidrOptLock.Unlock()
 	}()
 
-	instance, err := b.ecsClient.GetByName(node.Name)
+	instanceID, err := parseInstanceID(node.Spec.ProviderID)
 	if err != nil {
 		return err
 	}
 
-	secGroups, err := b.ecsClient.ListSecurityGroups(instance.Id)
+	secGroups, err := b.ecsClient.ListSecurityGroups(instanceID)
 	if err != nil {
 		return err
 	}
@@ -235,12 +236,13 @@ func (b Basic) allowHealthCheckRule(node *v1.Node) error {
 }
 
 func (b Basic) removeHealthCheckRules(node *v1.Node) error {
-	instance, err := b.ecsClient.GetByName(node.Name)
+
+	instanceID, err := parseInstanceID(node.Spec.ProviderID)
 	if err != nil {
 		return err
 	}
 
-	secGroups, err := b.ecsClient.ListSecurityGroups(instance.Id)
+	secGroups, err := b.ecsClient.ListSecurityGroups(instanceID)
 	if err != nil {
 		return err
 	}
@@ -456,10 +458,9 @@ func getLoadBalancerVersion(service *v1.Service) (LoadBalanceVersion, error) {
 	case "elasticity":
 		klog.Infof("Load balancer Version I for service %v", service.Name)
 		return VersionELB, nil
-	case "shared", "":
-		klog.Infof("Shared load balancer for service %v", service.Name)
-		return VersionShared, nil
-	case "dedicated":
+	// hcs only have shared lb, The dedicated load balancer matches the API on HCS just right,
+	// then using the dedicate lb client
+	case "dedicated", "shared", "":
 		klog.Infof("Dedicated Load balancer for service %v", service.Name)
 		return VersionDedicated, nil
 	case "dnat":
@@ -750,7 +751,7 @@ func (h *CloudProvider) listenerDeploy() error {
 			h.sendEvent("UpdateLoadBalancer", "Endpoints changed, start updating", service)
 
 			err = h.UpdateLoadBalancer(context.TODO(), clusterName, service, nodes)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "not found") {
 				klog.Errorf("failed to synchronization endpoint, service: %s/%s, error: %s",
 					service.Namespace, service.Name, err)
 			}

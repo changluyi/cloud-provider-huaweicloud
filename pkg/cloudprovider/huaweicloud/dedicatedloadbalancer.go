@@ -192,11 +192,11 @@ func (d *DedicatedLoadBalancer) createLoadbalancer(clusterName, subnetID string,
 		service.Namespace, service.Name, clusterName)
 
 	azStr := getStringFromSvsAnnotation(service, ElbAvailabilityZones, "")
-	if azStr == "" {
-		return nil, status.Errorf(codes.InvalidArgument,
-			"Invalid argument, annotation \"kubernetes.io/elb.availability-zones\" cannot be empty")
+
+	availabilityZoneList := make([]string, 0)
+	if azStr != "" {
+		availabilityZoneList = strings.Split(azStr, ";")
 	}
-	availabilityZoneList := strings.Split(azStr, ";")
 
 	createOpt := &elbmodel.CreateLoadBalancerOption{
 		Name:                 &name,
@@ -476,9 +476,10 @@ func (d *DedicatedLoadBalancer) getPool(elbID, listenerID string) (*elbmodel.Poo
 func (d *DedicatedLoadBalancer) deletePool(pool *elbmodel.Pool) []error {
 	errs := make([]error, 0)
 	// delete all members of pool
-	if err := d.sharedELBClient.DeleteAllPoolMembers(pool.Id); err != nil {
-		errs = append(errs, err)
-	}
+	// no need to delete shared pool
+	// if err := d.sharedELBClient.DeleteAllPoolMembers(pool.Id); err != nil {
+	//	errs = append(errs, err)
+	// }
 	// delete the pool monitor if exists
 	if err := d.dedicatedELBClient.DeleteHealthMonitor(pool.HealthmonitorId); err != nil && !common.IsNotFound(err) {
 		errs = append(errs, err)
@@ -515,7 +516,7 @@ func (d *DedicatedLoadBalancer) addOrRemoveMembers(loadbalancer *elbmodel.LoadBa
 	klog.Infof("LoadBalancer Service: %s/%s, Pod list: %v", service.Namespace, service.Name, len(podList.Items))
 	for _, pod := range podList.Items {
 		if !IsPodActive(pod) {
-			klog.Errorf("Pod %s/%s is not activated skipping adding to ELB", pod.Namespace, pod.Name)
+			klog.Infof("Pod %s/%s is not activated skipping adding to ELB", pod.Namespace, pod.Name)
 			continue
 		}
 
